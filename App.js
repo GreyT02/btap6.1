@@ -1,152 +1,120 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  AppState,
+  Alert
 } from 'react-native';
 
 export default function App() {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
-  const [appState, setAppState] = useState(AppState.currentState);
 
-  // ===============================
-  // FORMAT SỐ ĐIỆN THOẠI
-  // ===============================
+  // Format số điện thoại: 093 454 43 44
   const formatPhone = (text) => {
-    // chỉ giữ số
+    // Xóa ký tự không phải số
     const cleaned = text.replace(/\D/g, '');
 
-    // format: 093 454 34 44
-    const match = cleaned.match(/(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+    // Chia nhóm số
+    const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})$/);
 
     if (match) {
       return [match[1], match[2], match[3], match[4]]
-        .filter(Boolean)
+        .filter(x => x)
         .join(' ');
     }
 
-    return text;
+    return cleaned;
   };
 
-  // ===============================
-  // VALIDATE SỐ ĐIỆN THOẠI
-  // ===============================
-  const validatePhone = (text) => {
-    const cleaned = text.replace(/\s/g, '');
-
-    const phoneRegex = /^0\d{9}$/;
-
-    return phoneRegex.test(cleaned);
-  };
-
-  // ===============================
-  // VALIDATION KHI NHẬP
-  // ===============================
-  const handleChangeText = (text) => {
+  const handleChange = (text) => {
     const formatted = formatPhone(text);
     setPhone(formatted);
-
-    if (formatted.length > 0 && !validatePhone(formatted)) {
-      setError('Số điện thoại không đúng định dạng. Vui lòng nhập lại');
-    } else {
-      setError('');
-    }
+    setError('');
   };
 
-  // ===============================
-  // VALIDATION KHI CLICK
-  // ===============================
-  const handleContinue = () => {
-    if (!validatePhone(phone)) {
+  const validatePhone = () => {
+    const cleaned = phone.replace(/\s/g, '');
+
+    // Kiểm tra 10 số và bắt đầu bằng 0
+    const regex = /^0\d{9}$/;
+
+    if (!regex.test(cleaned)) {
+      setError('Số điện thoại không đúng định dạng. Vui lòng nhập lại');
       Alert.alert(
         'Lỗi',
         'Số điện thoại không đúng định dạng. Vui lòng nhập lại'
       );
-      return;
+    } else {
+      setError('');
+      Alert.alert('Thành công', 'Số điện thoại hợp lệ');
     }
-
-    Alert.alert('Thành công', 'Số điện thoại hợp lệ!');
   };
-
-  // ===============================
-  // useEffect – chạy 1 lần khi mở app
-  // ===============================
-  useEffect(() => {
-    Alert.alert('Thông báo', 'Ứng dụng đã khởi động');
-  }, []);
-
-  // ===============================
-  // useEffect – lắng nghe AppState
-  // ===============================
-  useEffect(() => {
-    const subscription = AppState.addEventListener(
-      'change',
-      (nextAppState) => {
-        setAppState(nextAppState);
-        console.log('App state:', nextAppState);
-      }
-    );
-
-    return () => subscription.remove();
-  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Đăng nhập</Text>
 
-      <Text style={styles.subtitle}>Nhập số điện thoại</Text>
+      <Text style={styles.label}>Nhập số điện thoại</Text>
+      <Text style={styles.subText}>
+        Dùng số điện thoại để đăng nhập hoặc đăng ký tài khoản
+      </Text>
 
       <TextInput
-        style={styles.input}
-        keyboardType="number-pad"
-        placeholder="Nhập số điện thoại"
+        style={[styles.input, error ? styles.inputError : null]}
+        placeholder="Nhập số điện thoại của bạn"
+        keyboardType="numeric"
         value={phone}
-        onChangeText={handleChangeText}
+        onChangeText={handleChange}
       />
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleContinue}>
+      <TouchableOpacity style={styles.button} onPress={validatePhone}>
         <Text style={styles.buttonText}>Tiếp tục</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: 'center',
+    marginTop: 50,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  subtitle: {
+  label: {
     fontSize: 16,
-    marginBottom: 10,
+    marginBottom: 5,
+  },
+  subText: {
+    color: 'gray',
+    marginBottom: 15,
   },
   input: {
     borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
     paddingVertical: 8,
   },
-  error: {
+  inputError: {
+    borderBottomColor: 'red',
+  },
+  errorText: {
     color: 'red',
     marginTop: 5,
   },
   button: {
-    backgroundColor: '#1E3A8A',
+    backgroundColor: 'blue',
     padding: 15,
-    marginTop: 20,
-    borderRadius: 6,
+    borderRadius: 5,
+    marginTop: 30,
     alignItems: 'center',
   },
   buttonText: {
